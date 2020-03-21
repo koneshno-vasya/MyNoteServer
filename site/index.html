@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>MyNotes</title>
+  </head>
+  <body>
+		<h1>MyNotes</h1>
+		<button id="create">create</button>
+		<ol>
+			{notes}
+		</ol>
+    <script>
+			let button = document.getElementById("create");
+			button.onclick = function(e){
+				let newName = prompt("create new note","unnamed1");
+				location = `https://MyNoteServer--vasya228.repl.co/create?create=true&name=${newName}`; 
+				
+			}
+		</script>
+  </body>
+</html>
