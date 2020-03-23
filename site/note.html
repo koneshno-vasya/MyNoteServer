@@ -18,33 +18,31 @@
 
 
     <script>
+			let name = document.getElementById("h1").textContent;
+
 			let save = document.getElementById("save");
-			save.onclick = function(e){
-				let name = document.getElementById("h1").textContent;
-				console.log(name);
+			save.onclick = function () {
 				let text = document.getElementById("text").value;
-				location = `https://MyNoteServer--vasya228.repl.co/notes/${name}.txt?save=true&text=${text}`;
+				location = `/notes/${name}?action=save&text=${text}`;
 			}
 			let rename = document.getElementById("rename");
-			rename.onclick = function(e){
-				let oldname = document.getElementById("h1").textContent;
-				let newName = prompt("enter a new name","unnamed")
-				location = `https://MyNoteServer--vasya228.repl.co/notes/${oldname}.txt?rename=true&save=true&newname=${newName}.txt`;
+			rename.onclick = function () {
+				if (document.getElementById("saved").textContent == "unsaved") {
+					alert("save before renaming!");
+				} else {
+					let newname = prompt("enter new name","unnamed");
+					if (newname != null) location = `/notes/${name}?action=rename&newname=${newname}`;
+					
+				}
 			}
 			let delete1 = document.getElementById("delete1");
-			delete1.onclick = function(e){
-				let name = document.getElementById("h1").textContent;
-				
-				location = `https://MyNoteServer--vasya228.repl.co/notes/${name}.txt?delete1=true`;
+			delete1.onclick = function () {
+				location = `/notes/${name}?action=delete`;
 			}
 			let textarea = document.getElementById("text");
 			textarea.oninput = function(){
 				document.getElementById("saved").textContent = "unsaved";
 			}
-
-
-
-		
 		</script>
   </body>
 </html>

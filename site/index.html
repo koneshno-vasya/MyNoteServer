@@ -12,11 +12,14 @@
 			{notes}
 		</ol>
     <script>
-			let button = document.getElementById("create");
-			button.onclick = function(e){
-				let newName = prompt("create new note","unnamed1");
-				location = `https://MyNoteServer--vasya228.repl.co/create?create=true&name=${newName}`; 
-				
+			//message
+			
+			let create = document.getElementById("create");
+			create.onclick = function(){
+				let newName = prompt("enter new file name","unnamed");
+				if (newName != null){
+					location = `https://MyNoteServer--vasya228.repl.co/?create=true&name=${newName}`
+				} 
 			}
 		</script>
   </body>

@@ -1,87 +1,97 @@
-const express = require("express");
-const app = express();
-const fs = require("fs");
-let list;
-let noteNames;
+let express = require("express");
+let app = express();
+let fs = require("fs");
 
-launch();
 
-function launch(){
- 	list = "";
- 	noteNames = fs.readdirSync("notes");
-
- 	for (let i = 0; i < noteNames.length; i++){
-	 	list = list + `<li><a href="/notes/${noteNames[i]}"> ${noteNames[i].slice(0, -4)} </a></li>`;//избавляюсь от расширения .txt
- 	}
-
+function getListHTMLCode(){
+	let listHTMLCode = "";
+	let filesArray = fs.readdirSync("notes");
+	for(let i of filesArray){
+		listHTMLCode = listHTMLCode + `<li><a href = "/notes/${i.slice(0, -4)}">${i.slice(0, -4)}</a></li>`;
+	}
+	return listHTMLCode;
 }
 
-app.get("/",function(request, response){
-	launch();
-	fs.readFile("site/index.html", "utf8", function(error, data){
-		data = data.replace("{notes}", list);
-    response.end(data);
-  });
+function checkNameAvilable(name){
+	let filesArray = fs.readdirSync("notes");
+	for(let i of filesArray){
+		if (i == name+".txt") return false;
+	}
+	if(/[<>:"|;?*/.,]/.test(name)) return false;
+	return true;
+}
+
+app.get("/",function (req,res) {
+	
+	if (req.query.create) {
+		let name = req.query.name;
+		if(checkNameAvilable(name)){
+			fs.writeFile(`notes/${name}.txt`,"",function(error){
+				res.redirect(`../notes/${name}`);
+			});
+		} else {
+			fs.readFile("site/index.html","utf8",function(error,data){
+				data = data.replace("{notes}",getListHTMLCode());
+				data = data.replace("//message","alert(`this name is invalid`);");
+				res.end(data);
+			});
+		}
+	} else {
+		fs.readFile("site/index.html","utf8",function(error,data){
+			data = data.replace("{notes}",getListHTMLCode());
+			res.end(data);
+		});
+	}
 });
 
-app.get("/create",function(request, response){
-	if(request.query.create){
-		fs.writeFileSync(`notes/${request.query.name}.txt`,"");
-		response.redirect("https://MyNoteServer--vasya228.repl.co");
-	}
-	launch();
-	fs.readFile("site/index.html", "utf8", function(error, data){
-		data = data.replace("{notes}", list);
-    response.end(data);		
-  });
-});
-
-
-
-
-app.get("/notes/:fileName", function(request, response){ 
-	console.log(request.url)
-	let name = request.params.fileName;
-	let currentFile = fs.readFileSync('notes/' + name);
-	launch();
-	if (request.query.save){													
-		fs.writeFile(`notes/${name}`,request.query.text,function(){
-			if(!request.query.rename){
-				
-				response.redirect(`../notes/${name}`);
-				
-			}
-  	});
-
-	}
-	if (request.query.delete1){
-
-		fs.unlink(`notes/${name}`,function(){
-
-			response.redirect("https://MyNoteServer--vasya228.repl.co");
-			
+app.get("/notes/:fileName",function(req,res){
+	
+	let name = req.params.fileName;
+	let act = req.query.action;
+	if (act == "delete"){
+		
+		fs.unlink(`notes/${name}.txt`,function(){
+			res.redirect(`../`);
 		});
 
-	} else if (request.query.rename){
+	} else if (act == "rename"){
+		
+		let newName = req.query.newname;
+		let oldFileData;
+		if (checkNameAvilable(newName)){
 
-		fs.rename(`notes/${name}`,`notes/${request.query.newname}`,function(){
+			oldFileData = fs.readFileSync(`notes/${name}.txt`, "utf8");
+			fs.renameSync(`notes/${name}.txt`, `notes/${newName}.txt`);
+			fs.writeFileSync(`notes/${newName}.txt`, oldFileData);
 
-			response.redirect(`../notes/${request.query.newname}`);
-			
-  	});
+			res.redirect(`../notes/${newName}`);
 
+		} else {
+			res.end(`<a href="/notes/${name}">back</a><h1>invalid name<h1>`);
+		}
+
+	} else if (act == "save"){
+		
+		let text = req.query.text;
+		text = text == undefined ? "" : text;
+		fs.writeFile(`notes/${name}.txt`,text,function(){
+			res.redirect(`../notes/${name}`);
+		});
+
+	} else {
+		
+		let fileData = fs.readFileSync(`notes/${name}.txt`,"utf8");
+		fs.readFile("site/note.html","utf8",function(error,data){
+			if (error) res.end("error");
+			data = data.replace("{text}", fileData);
+			data = data.replace("{NoteName}",name);
+			res.end(data);
+		});
 	}
-	
-
-
-	fs.readFile("site/note.html", "utf8", function(error, data){
-    data = data.replace("{NoteName}", name.slice(0, -4));
-		data = data.replace("{text}", currentFile.toString());
-    response.end(data);
-  });
-
-
 });
+
+
+
 
 
 app.listen(3000);
